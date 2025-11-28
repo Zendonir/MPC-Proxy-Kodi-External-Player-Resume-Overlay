@@ -47,6 +47,11 @@ No modifications to Kodi itself are required — simply configure the proxy as y
 - Kodi → Proxy → Resume Dialog → MPC  
 - No modifications to Kodi skin or core required
 
+## 🎬 Preview – Resume Dialog
+
+![MPC Proxy Resume Dialog](https://raw.githubusercontent.com/Zendonir/MPC-Proxy-Kodi-External-Player-Resume-Overlay/main/images/Interface.jpg)
+
+
 ---
 
 ## ⚙ Configuration (mpc_proxy_config.json)
