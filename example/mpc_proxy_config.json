@@ -1,0 +1,24 @@
+{
+  "ui": {
+    "min_resume_seconds": 120,
+    "colors": {
+      "background": "#000000",
+      "text": "#FFFFFF",
+      "button_normal": "#333333",
+      "button_focus": "#1E90FF",
+      "accent": "#1E90FF"
+    },
+    "font": {
+      "title_size": 48,
+      "button_size": 36
+    }
+  },
+  "player": {
+    "search_names": [
+      "mpc-hc64.exe",
+      "mpc-hc.exe",
+      "mpc-be64.exe",
+      "mpc-be.exe"
+    ]
+  }
+}
