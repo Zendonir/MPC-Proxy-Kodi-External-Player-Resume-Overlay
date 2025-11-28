@@ -1,3 +1,11 @@
+# MPC Proxy – Kodi External Player Resume Overlay
+# Vollständiges Script mit:
+# - MySQL / SQLite Resume
+# - MPC-HC / MPC-BE Erkennung
+# - Konfigurierbare UI aus mpc_proxy_config.json
+# - Mehrsprachigem Overlay (Sprache aus Kodi)
+# - Tastatur + Maus Bedienung
+
 import os
 import sys
 import json
@@ -8,8 +16,8 @@ import xml.etree.ElementTree as ET
 import tkinter as tk
 
 # =====================================================================
-# Default-Konfiguration (wird genutzt, wenn MPC_Proxy_config.json fehlt
-# oder Felder daraus fehlen)
+# Default-Konfiguration (wird genutzt, wenn mpc_proxy_config.json fehlt
+# oder Einträge darin fehlen)
 # =====================================================================
 DEFAULT_PROXY_CONFIG = {
     "ui": {
@@ -37,6 +45,67 @@ DEFAULT_PROXY_CONFIG = {
 }
 
 # =====================================================================
+# Sprach-Tabelle (UI-Texte für verschiedene Kodi-Sprachen)
+# =====================================================================
+LANG = {
+    "en_gb": {
+        "resume_question": "Resume from {time}?",
+        "resume_button": "Resume at {time}",
+        "restart": "Start from beginning",
+    },
+    "en_us": {
+        "resume_question": "Resume from {time}?",
+        "resume_button": "Resume at {time}",
+        "restart": "Start from beginning",
+    },
+    "de_de": {
+        "resume_question": "Fortsetzen ab {time}?",
+        "resume_button": "Weiter bei {time}",
+        "restart": "Von vorne starten",
+    },
+    "fr_fr": {
+        "resume_question": "Reprendre à {time} ?",
+        "resume_button": "Reprendre à {time}",
+        "restart": "Recommencer depuis le début",
+    },
+    "es_es": {
+        "resume_question": "Reanudar desde {time}?",
+        "resume_button": "Reanudar en {time}",
+        "restart": "Empezar desde el principio",
+    },
+    "it_it": {
+        "resume_question": "Riprendere da {time}?",
+        "resume_button": "Riprendi a {time}",
+        "restart": "Ricomincia dall'inizio",
+    },
+    "pt_br": {
+        "resume_question": "Retomar de {time}?",
+        "resume_button": "Retomar em {time}",
+        "restart": "Começar do início",
+    },
+    "pt_pt": {
+        "resume_question": "Retomar desde {time}?",
+        "resume_button": "Retomar em {time}",
+        "restart": "Começar do início",
+    },
+    "nl_nl": {
+        "resume_question": "Hervatten vanaf {time}?",
+        "resume_button": "Hervatten op {time}",
+        "restart": "Opnieuw starten",
+    },
+    "pl_pl": {
+        "resume_question": "Wznawiać od {time}?",
+        "resume_button": "Wznów o {time}",
+        "restart": "Zacznij od początku",
+    },
+    "tr_tr": {
+        "resume_question": "{time} konumundan devam edilsin mi?",
+        "resume_button": "{time} konumundan devam et",
+        "restart": "Baştan başla",
+    },
+}
+
+# =====================================================================
 # Hilfsfunktion: rekursives Mergen von Dicts
 # =====================================================================
 def merge_dict(default, custom):
@@ -55,24 +124,96 @@ def merge_dict(default, custom):
     return result
 
 # =====================================================================
-# Proxy-Config laden (MPC_Proxy_config.json im EXE-Ordner)
+# Proxy-Config laden (mpc_proxy_config.json im EXE-Ordner)
 # =====================================================================
 def load_proxy_config(base_dir):
     cfg_path = os.path.join(base_dir, "mpc_proxy_config.json")
     if not os.path.exists(cfg_path):
-        print("[WARN] MPC_Proxy_config.json nicht gefunden → nutze Default-Konfiguration.")
+        print("[WARN] mpc_proxy_config.json nicht gefunden → nutze Default-Konfiguration.")
         return DEFAULT_PROXY_CONFIG
 
     try:
         with open(cfg_path, "r", encoding="utf-8") as f:
             user_cfg = json.load(f)
         cfg = merge_dict(DEFAULT_PROXY_CONFIG, user_cfg)
-        print("[INFO] MPC_Proxy_config.json geladen.")
+        print("[INFO] mpc_proxy_config.json geladen.")
         return cfg
     except Exception as e:
-        print(f"[WARN] Fehler beim Laden von MPC_Proxy_config.json: {e}")
+        print(f"[WARN] Fehler beim Laden von mpc_proxy_config.json: {e}")
         print("[WARN] Nutze Default-Konfiguration.")
         return DEFAULT_PROXY_CONFIG
+
+# =====================================================================
+# Kodi-Sprache aus guisettings.xml ermitteln
+# =====================================================================
+def get_kodi_language():
+    """
+    Liest die Sprache aus Kodi aus.
+    Unterstützt:
+      - Kodi >= 20  (resource.language.xx_xx)
+      - Kodi <= 19  (locale/language Struktur)
+      - Fallback auf en_gb
+    """
+
+    path = os.path.join(
+        os.getenv("APPDATA"),
+        "Kodi",
+        "userdata",
+        "guisettings.xml"
+    )
+
+    if not os.path.exists(path):
+        print("[INFO] guisettings.xml nicht gefunden → Sprache = en_gb")
+        return "en_gb"
+
+    try:
+        tree = ET.parse(path)
+        root = tree.getroot()
+
+        # ---------------------------------------------------------
+        # 1) Neue Kodi-Versionen: <setting id="locale.language">
+        # ---------------------------------------------------------
+        setting_lang = root.find('.//setting[@id="locale.language"]')
+        if setting_lang is not None and setting_lang.text:
+            code = setting_lang.text.strip().lower()
+            print("[DEBUG] Kodi Sprache (Setting):", code)
+
+            # normalize "resource.language.de_de" → "de_de"
+            if code.startswith("resource.language."):
+                code = code.replace("resource.language.", "")
+
+            return code
+
+        # ---------------------------------------------------------
+        # 2) Alte Kodi-Versionen: <locale><language>de_de</language></locale>
+        # ---------------------------------------------------------
+        legacy_lang = root.find(".//locale/language")
+        if legacy_lang is not None and legacy_lang.text:
+            code = legacy_lang.text.strip().lower()
+            print("[DEBUG] Kodi Sprache (Legacy):", code)
+            return code
+
+        # ---------------------------------------------------------
+        # 3) Ultimativer Fallback
+        # ---------------------------------------------------------
+        print("[INFO] Keine Kodi-Sprache gefunden → fallback = en_gb")
+        return "en_gb"
+
+    except Exception as e:
+        print(f"[WARN] Fehler beim Lesen der Kodi Sprache: {e} → fallback = en_gb")
+        return "en_gb"
+
+
+def get_texts_for_language():
+    code = get_kodi_language()
+    if code in LANG:
+        return LANG[code]
+    # fallback auf Sprache ohne Region, z.B. "en" aus "en_us"
+    short = code.split("_")[0]
+    for key in LANG.keys():
+        if key.startswith(short):
+            return LANG[key]
+    return LANG["en_gb"]
 
 # =====================================================================
 # Prüfen ob advancedsettings.xml existiert
@@ -135,7 +276,7 @@ def find_video_database(conn):
     return selected
 
 # =====================================================================
-# Resume aus MySQL holen (gefixt)
+# Resume aus MySQL holen
 # =====================================================================
 def get_resume_mysql(conn, dbname, file_path):
     folder, filename = os.path.split(file_path)
@@ -145,8 +286,6 @@ def get_resume_mysql(conn, dbname, file_path):
     print(f"[MySQL] Datei:                          {filename}")
 
     cur = conn.cursor()
-
-    # idFile suchen – aktuell über Dateiname
     idFile = None
 
     try:
@@ -170,7 +309,6 @@ def get_resume_mysql(conn, dbname, file_path):
         print("[MySQL] idFile nicht gefunden → Resume=0")
         return 0.0
 
-    # Bookmark suchen – wie in SQLite: type = 1 bevorzugen
     cur.execute(
         f"""
         SELECT timeInSeconds, type, player
@@ -211,7 +349,12 @@ def get_resume_mysql(conn, dbname, file_path):
 def get_resume_sqlite(file_path):
     db_dir = os.path.join(os.getenv("APPDATA"), "Kodi", "userdata", "Database")
 
-    candidates = [f for f in os.listdir(db_dir) if f.lower().startswith("myvideos") and f.lower().endswith(".db")]
+    try:
+        candidates = [f for f in os.listdir(db_dir) if f.lower().startswith("myvideos") and f.lower().endswith(".db")]
+    except FileNotFoundError:
+        print("[SQLite] Datenbankordner nicht gefunden → 0")
+        return 0.0
+
     if not candidates:
         print("[SQLite] Keine lokale Kodi-DB gefunden!")
         return 0.0
@@ -263,7 +406,6 @@ def get_resume_sqlite(file_path):
 # MPC-HC / MPC-BE automatisch erkennen (optional via Config)
 # =====================================================================
 def find_player_exe(exe_dir, proxy_cfg):
-    # Aus Config lesen, sonst Default
     player_cfg = proxy_cfg.get("player", {})
     candidates = player_cfg.get("search_names", DEFAULT_PROXY_CONFIG["player"]["search_names"])
 
@@ -277,7 +419,7 @@ def find_player_exe(exe_dir, proxy_cfg):
     sys.exit(1)
 
 # =====================================================================
-# FULLSCREEN Resume-Fenster (mit Config, Tastatursteuerung)
+# FULLSCREEN Resume-Fenster (mit Config, Maus + Tastatur, Mehrsprachig)
 # =====================================================================
 def ask_resume_choice(resume_seconds, ui_cfg):
     print(f"[UI] Resume-Position (raw): {resume_seconds}")
@@ -288,8 +430,10 @@ def ask_resume_choice(resume_seconds, ui_cfg):
     s = total % 60
     hms = f"{h:02d}:{m:02d}:{s:02d}"
 
+    texts = get_texts_for_language()
+
     colors = ui_cfg.get("colors", {})
-    fonts  = ui_cfg.get("font", {})
+    fonts = ui_cfg.get("font", {})
 
     bg_color   = colors.get("background", "#000000")
     text_color = colors.get("text", "#FFFFFF")
@@ -305,17 +449,18 @@ def ask_resume_choice(resume_seconds, ui_cfg):
     root.configure(bg=bg_color)
     root.focus_set()
 
-    # ESC = von vorne
+    choice = {"value": None}
+
     def on_escape(event=None):
-        nonlocal choice
         choice["value"] = 0
         root.destroy()
+
     root.bind("<Escape>", on_escape)
 
     frame = tk.Frame(root, bg=bg_color)
     frame.pack(expand=True)
 
-    msg = f"Fortsetzen ab {hms}?" if resume_seconds > 0 else "Von vorne starten?"
+    msg = texts["resume_question"].format(time=hms)
 
     label = tk.Label(
         frame,
@@ -325,8 +470,6 @@ def ask_resume_choice(resume_seconds, ui_cfg):
         font=("Arial", title_size, "bold")
     )
     label.pack(pady=60)
-
-    choice = {"value": None}
 
     def start_new():
         choice["value"] = 0
@@ -338,13 +481,10 @@ def ask_resume_choice(resume_seconds, ui_cfg):
 
     buttons = []
 
-    # -----------------------
-    # BUTTON ERZEUGUNG
-    # -----------------------
     if resume_seconds > 2:
         btn_resume = tk.Label(
             frame,
-            text=f"Weiter bei {hms}",
+            text=texts["resume_button"].format(time=hms),
             font=("Arial", button_size),
             bg=btn_normal,
             fg=text_color,
@@ -357,7 +497,7 @@ def ask_resume_choice(resume_seconds, ui_cfg):
 
     btn_new = tk.Label(
         frame,
-        text="Von vorne starten",
+        text=texts["restart"],
         font=("Arial", button_size),
         bg=btn_normal,
         fg=text_color,
@@ -368,9 +508,6 @@ def ask_resume_choice(resume_seconds, ui_cfg):
     buttons.append(btn_new)
     btn_new.pack(pady=20)
 
-    # -----------------------
-    # FOKUS- UND HIGHLIGHT-LOGIK
-    # -----------------------
     selection_index = 0
 
     def update_selection():
@@ -379,9 +516,6 @@ def ask_resume_choice(resume_seconds, ui_cfg):
 
     update_selection()
 
-    # -----------------------
-    # MAUS: Hover → Fokus setzen
-    # -----------------------
     def make_on_enter(i):
         def _on_enter(event):
             nonlocal selection_index
@@ -389,7 +523,6 @@ def ask_resume_choice(resume_seconds, ui_cfg):
             update_selection()
         return _on_enter
 
-    # MAUS: Klick → Aktion ausführen
     def make_on_click(button):
         def _on_click(event):
             button.command()
@@ -399,20 +532,15 @@ def ask_resume_choice(resume_seconds, ui_cfg):
         b.bind("<Enter>", make_on_enter(i))
         b.bind("<Button-1>", make_on_click(b))
 
-    # -----------------------
-    # TASTATUR: ↑ ↓ ENTER
-    # -----------------------
     def on_key(event):
         nonlocal selection_index
 
         if event.keysym == "Down":
             selection_index = (selection_index + 1) % len(buttons)
             update_selection()
-
         elif event.keysym == "Up":
             selection_index = (selection_index - 1) % len(buttons)
             update_selection()
-
         elif event.keysym in ("Return", "KP_Enter"):
             buttons[selection_index].command()
 
@@ -420,8 +548,9 @@ def ask_resume_choice(resume_seconds, ui_cfg):
 
     root.mainloop()
 
-    return choice["value"] if choice["value"] is not None else 0
-
+    if choice["value"] is None:
+        return 0
+    return choice["value"]
 
 # =====================================================================
 # MPC starten
@@ -442,7 +571,7 @@ def start_player(player_path, video_file, resume_seconds):
 # =====================================================================
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Verwendung: proxy.exe <Videodatei>")
+        print("Verwendung: mpc_proxy.exe <Videodatei>")
         sys.exit(1)
 
     video = sys.argv[1]
@@ -450,7 +579,6 @@ if __name__ == "__main__":
 
     exe_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-    # Proxy-Config laden (mit Fallback)
     proxy_cfg = load_proxy_config(exe_dir)
     ui_cfg = proxy_cfg.get("ui", {})
     min_resume = ui_cfg.get("min_resume_seconds", DEFAULT_PROXY_CONFIG["ui"]["min_resume_seconds"])
@@ -477,7 +605,6 @@ if __name__ == "__main__":
     else:
         resume = get_resume_sqlite(video)
 
-    # Wenn Resume < min_resume_seconds → Direkt starten, ohne Overlay
     if resume < min_resume:
         print(f"[INFO] Resume ({resume}s) < {min_resume}s → ohne Nachfrage direkt von vorne starten.")
         resume = 0
