@@ -15,7 +15,7 @@ No modifications to Kodi itself are required — simply configure the proxy as y
 - Automatic detection of:
   - **Kodi MySQL** video database via `advancedsettings.xml`
   - **Local SQLite** Kodi database (fallback)
-- Reads the correct resume bookmark (type=1) like Kodi itself
+- Reads the correct resume bookmark (`type = 1`), just like Kodi
 
 ### Kodi-Style Resume Dialog
 - Fullscreen, Estuary-inspired design  
@@ -26,26 +26,26 @@ No modifications to Kodi itself are required — simply configure the proxy as y
 - **Mouse navigation:**  
   - Hover = focus  
   - Click = execute  
-- Time formatted as **HH:MM:SS**  
-- Fully themeable via configuration
+- Time display in **HH:MM:SS** format  
+- Color theme and typography fully configurable
 
 ### Highly Configurable
-- UI colors, fonts, and layout defined in `MPC_Proxy_config.json`
-- Customizable **minimum resume threshold**
-- Configurable MPC executable detection order
+- All UI colors, font sizes, and layout defined in **`MPC_Proxy_config.json`**
+- Customizable **minimum resume threshold** (e.g., skip dialog if less than 120s)
+- Configurable external player search order (MPC-HC / MPC-BE)
 
 ### Robust Path Handling
 - Supports:
   - UNC paths (`\\server\share`)
-  - Mapped drives (`Z:\Videos\...`)
-  - Absolute paths
-- Normalizes paths for reliable DB matching
+  - Mapped drive paths (`Z:\Movies\...`)
+  - Local absolute paths
+- Normalizes paths similar to Kodi
 - Clean fallback logic for missing configuration files
 
-### Transparent Integration
-- Works as a drop-in replacement for Kodi’s internal player
-- No Kodi modifications required
-- Simply use the proxy in your `playercorefactory.xml`
+### Transparent Kodi Integration
+- Acts as a drop-in external player wrapper  
+- No Kodi skin or core modifications required  
+- Kodi passes the file path → proxy shows resume dialog → MPC plays
 
 ---
 
