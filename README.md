@@ -80,7 +80,7 @@ Example:
     ]
   }
 }
-
+```
 If the config file is missing, defaults are used automatically.
 
 ---
@@ -112,7 +112,7 @@ Create or edit:
 %APPDATA%\Kodi\userdata\playercorefactory.xml
 
 Example:
-
+```playercorefactory
 <playercorefactory>
     <players>
         <player
@@ -132,15 +132,9 @@ Example:
         <rule filetypes="mkv|mp4|avi|mov|wmv" player="MPCProxy" />
     </rules>
 </playercorefactory>
-
+```
 ---
 
 ## 3. Restart Kodi
 
 Kodi will now use MPC Proxy for all configured video formats.
-
----
-
-## License
-
-MIT License — free to use, modify, and redistribute.
