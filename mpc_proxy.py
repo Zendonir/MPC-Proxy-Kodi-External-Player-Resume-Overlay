@@ -58,7 +58,7 @@ def merge_dict(default, custom):
 # Proxy-Config laden (MPC_Proxy_config.json im EXE-Ordner)
 # =====================================================================
 def load_proxy_config(base_dir):
-    cfg_path = os.path.join(base_dir, "MPC_Proxy_config.json")
+    cfg_path = os.path.join(base_dir, "mpc_proxy_config.json")
     if not os.path.exists(cfg_path):
         print("[WARN] MPC_Proxy_config.json nicht gefunden → nutze Default-Konfiguration.")
         return DEFAULT_PROXY_CONFIG
