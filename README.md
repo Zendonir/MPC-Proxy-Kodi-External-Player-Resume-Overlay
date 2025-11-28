@@ -1,52 +1,61 @@
 # MPC Proxy – Kodi External Player Resume Overlay
 
-MPC Proxy is a lightweight Windows proxy for Kodi that replaces Kodi’s internal video player with MPC-HC or MPC-BE.
-It automatically reads the resume point from Kodi’s SQLite or MySQL video database and displays a Kodi-style fullscreen resume dialog before launching the external player.
+**MPC Proxy** is a lightweight Windows proxy for Kodi that replaces Kodi’s internal video player with **MPC-HC or MPC-BE**.  
+It automatically reads the resume point from Kodi’s SQLite or MySQL video database and displays a **Kodi-style fullscreen resume dialog** before launching the external player.
 
-The UI supports keyboard and mouse navigation, closely mimicking the original Kodi Estuary experience.
+The UI supports **keyboard and mouse navigation**, closely mimicking the original **Kodi Estuary** experience.
 
 No modifications to Kodi itself are required — simply configure the proxy as your external player.
 
 ---
 
-## Features
+## ✨ Features
 
 ### Database Integration
 - Automatically detects:
-  - Kodi MySQL video database via advancedsettings.xml
-  - Local SQLite Kodi database (fallback)
-- Reads the correct resume bookmark (type = 1), matching Kodi’s behavior.
+  - **Kodi MySQL** video database via `advancedsettings.xml`
+  - **Local SQLite** Kodi database (fallback)
+- Reads the correct resume bookmark (`type = 1`), matching Kodi’s own behavior.
 
 ### Kodi-Style Resume Dialog
-- Fullscreen Estuary-style dialog
-- Keyboard navigation (Up / Down / Enter / Esc)
-- Mouse hover + click navigation
-- Resume time displayed as HH:MM:SS
+- Fullscreen Estuary-style resume screen  
+- **Keyboard navigation**:  
+  - Up / Down = select  
+  - Enter = confirm  
+  - Esc = start from beginning  
+- **Mouse navigation**:  
+  - Hover = focus  
+  - Click = execute  
+- Resume point shown in **HH:MM:SS** format  
 - UI fully themeable via JSON
 
 ### Highly Configurable
-- UI theme, fonts, and logic defined in mpc_proxy_config.json
-- Adjustable minimum resume threshold
+- All UI colors, font sizes, and logic defined in **`mpc_proxy_config.json`**
+- Adjustable **minimum resume threshold** (e.g., skip dialog if <120s)
 - MPC player autodetection (MPC-HC, MPC-BE, 32/64-bit)
 
 ### Robust Path Handling
-- Supports UNC paths, mapped drives, and local paths
-- Kodi-like path normalization
-- Fallback logic for missing config files
+- Supports:
+  - UNC paths (`\\server\share`)
+  - Mapped drives (`Z:\Movies\...`)
+  - Local paths  
+- Normalizes paths similar to Kodi  
+- Clean fallback logic for missing config files
 
 ### Seamless Kodi Integration
-- Works as a transparent external player wrapper
-- Kodi → Proxy → Resume Dialog → MPC
-- No Kodi modification required
+- Works as a transparent external player wrapper  
+- Kodi → Proxy → Resume Dialog → MPC  
+- No modifications to Kodi skin or core required
 
 ---
 
-## Configuration (mpc_proxy_config.json)
+## ⚙ Configuration (mpc_proxy_config.json)
 
-Place mpc_proxy_config.json next to mpc_proxy.exe.
+Place `mpc_proxy_config.json` **next to** `mpc_proxy.exe`.
 
 Example:
 
+```json
 {
   "ui": {
     "min_resume_seconds": 120,
