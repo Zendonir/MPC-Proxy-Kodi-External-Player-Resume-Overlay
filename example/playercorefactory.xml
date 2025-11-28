@@ -1,0 +1,14 @@
+<playercorefactory>
+<players>
+<player name="MPC-PROXY" type="ExternalPlayer" video="true">
+<filename>C:\Program Files\MPC-HC\mpc_proxy.exe</filename>
+<args>"{1}"</args>
+<hidexbmc>true</hidexbmc>
+<hideconsole>false</hideconsole>
+</player>
+</players>
+<rules action="prepend">
+<rule video="true" player="MPC-PROXY"/>
+<rule internetstream="true" player="VideoPlayer"/>
+</rules>
+</playercorefactory>
