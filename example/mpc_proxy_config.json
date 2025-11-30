@@ -20,5 +20,8 @@
       "mpc-be64.exe",
       "mpc-be.exe"
     ]
+  },
+  "database": {
+    "sqlite_path": null
   }
 }
