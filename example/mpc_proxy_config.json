@@ -21,7 +21,7 @@
       "mpc-be.exe"
     ]
   },
-  "database": {
-    "sqlite_path": null
+  "userdata": {
+      "userdata_path": null
   }
 }
